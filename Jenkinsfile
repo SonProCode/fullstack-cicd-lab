@@ -21,7 +21,7 @@ pipeline {
         sh '''
           docker build \
             -t $REGISTRY/$BACKEND_IMAGE:$TAG \
-            ./WebAPI
+             ./WebAPI/WebAPI
         '''
       }
     }

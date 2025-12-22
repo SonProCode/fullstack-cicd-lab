@@ -5,7 +5,7 @@ pipeline {
     REGISTRY = "thson20210744"
     BACKEND_IMAGE = "fullstack-backend"
     FRONTEND_IMAGE = "fullstack-frontend"
-    TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+    TAG = "${env.GIT_BRANCH}-${env.BUILD_NUMBER}"
   }
 
   stages {

@@ -1,0 +1,14 @@
+# Bỏ qua thư viện nặng nhất của React/Node
+node_modules
+
+# Bỏ qua các file log và build rác
+npm-debug.log
+build
+dist
+.git
+.vs
+.vscode
+
+# Nếu là project .NET thì bỏ thêm:
+bin/
+obj/

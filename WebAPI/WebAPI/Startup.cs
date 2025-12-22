@@ -28,26 +28,43 @@ namespace WebAPI
         {
             services.AddControllers();
 
+            // SỬA TẠI ĐÂY: Chuyển từ UseSqlServer sang UseMySql
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<DonationDBContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("DevConnection")));
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("FrontendPolicy", builder =>
+                {
+                    var allowedOrigins = Configuration["CORS_ALLOWED_ORIGINS"];
 
-            services.AddCors();
+                    if (!string.IsNullOrEmpty(allowedOrigins))
+                    {
+                        builder.WithOrigins(
+                                allowedOrigins.Split(
+                                    ",",
+                                    StringSplitOptions.RemoveEmptyEntries
+                                )
+                            )
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DonationDBContext dbContext)
         {
-            app.UseCors(options =>
-            options.WithOrigins("http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod());
-
+            // auto migarte database    
+            dbContext.Database.Migrate();
 
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors("FrontendPolicy");
 
             app.UseRouting();
 

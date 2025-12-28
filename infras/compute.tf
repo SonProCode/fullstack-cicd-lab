@@ -45,25 +45,24 @@ module "ecs" {
                   for env in try(service_config.environment, []) : {
                       name  = env.name
                       # Sử dụng replace lồng nhau để thay thế các placeholder
-                      value = replace(
-                              replace(
-                                  env.value, 
-                                  "<RDS-ENDPOINT>", 
-                                  try(module.rds[service_config.rds_reference].db_instance_address, "")
-                              ), 
-                              "ALB_DNS_PLACEHOLDER", 
-                              try(module.alb[service_config.alb_key].dns_name, "")
-                              )
+                     value = replace(
+                        replace(
+                          env.value, 
+                          "<RDS-ENDPOINT>", 
+                          try(module.rds[service_config.rds_reference].db_instance_address, "")
+                        ), 
+                        "ALB_DNS_PLACEHOLDER", 
+                        try(module.alb[service_config.alb_key].dns_name, "")
+                      )
                   }
               ]
 
               secrets = [
                   for s in try(service_config.secrets, []) : {
-                  name      = s.name
-                  valueFrom = module.rds[s.rds_secret_key].db_instance_master_user_secret_arn
+                    name      = s.name 
+                    valueFrom = "${module.rds[s.rds_secret_key].db_instance_master_user_secret_arn}:password::"
                   }
               ]
-
               enable_cloudwatch_logging = true
         }
       }
@@ -83,21 +82,20 @@ module "ecs" {
           }
         }]
       } : null
+      
+      task_exec_iam_role_policies = can(service_config.secrets) ? {
+        "ReadRdsSecret" = aws_iam_policy.ecs_secrets_policy["${each.key}.${service_name}"].arn
+      } : {}
 
       # --- Load Balancer ---
-      # Logic: Nếu có khai báo target_group_key trong YAML thì mới tạo block load_balancer
       load_balancer = can(service_config.target_group_key) ? {
         service = {
-            # Lưu ý: Bạn cần thay thế `aws_lb_target_group` bên dưới bằng resource thực tế hoặc module lookup của bạn
-            # Ví dụ: module.alb.target_groups[service_config.target_group_key].arn
             target_group_arn = try(module.alb[service_config.alb_key].target_groups[service_config.target_group_key].arn, null)            
             container_name   = service_name
             container_port   = try(service_config.container_port, 80)
         }
       } : {}
-
       # --- Network ---
-      # Tự động lấy Private Subnet từ module VPC dựa vào vpc_key trong YAML
       subnet_ids = try(module.vpc[each.value.vpc_key].private_subnets, [])
 
       # --- Security Group Rules ---
@@ -106,4 +104,48 @@ module "ecs" {
   }
 
   tags = merge(local.tags, try(each.value.tags, {}))
+}
+
+
+#===========================================================
+locals {
+  # Lọc ra danh sách phẳng các service thực sự có khai báo block 'secrets'
+  services_needing_secrets = flatten([
+    for cluster_key, cluster_config in try(local.var.ecs_clusters, {}) : [
+      for service_name, service_config in try(cluster_config.services, {}) : {
+        cluster_key  = cluster_key
+        service_name = service_name
+        secrets      = service_config.secrets
+      }
+      if can(service_config.secrets) && length(try(service_config.secrets, [])) > 0
+    ]
+  ])
+}
+
+resource "aws_iam_policy" "ecs_secrets_policy" {
+  for_each = {
+    for s in local.services_needing_secrets : "${s.cluster_key}.${s.service_name}" => s
+  }
+
+  name        = "${each.value.service_name}-secrets-policy"
+  description = "Allow ECS to fetch RDS secrets from Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["secretsmanager:GetSecretValue"]
+        Effect   = "Allow"
+        # Lấy ARN động từ module RDS thông qua key rds_secret_key trong YAML
+        Resource = [
+          for s in each.value.secrets : module.rds[s.rds_secret_key].db_instance_master_user_secret_arn
+        ]
+      },
+      {
+        Action   = ["kms:Decrypt"]
+        Effect   = "Allow"
+        Resource = ["*"]
+      }
+    ]
+  })
 }

@@ -52,26 +52,29 @@ ecs_clusters:
       backend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-backend:dev-5"
+        image: "thson20210744/fullstack-backend:dev-6"
         container_port: 80
         port_name: "backend-http"
         rds_reference: "main_db"
         security_group_keys: ["ecs_sg"]
         alb_key: "main_alb"
         secrets:
-          - name: "DB_PASSWORD"
-            # Key này dùng để trỏ đến Secret của RDS
+          - name: "DB_PASSWORD" 
             rds_secret_key: "main_db"
         # Biến môi trường
         environment:
           - name: "ASPNETCORE_ENVIRONMENT"  
             value: "Development"
-          - name: "ConnectionStrings__DefaultConnection"
-            value: "server=<RDS-ENDPOINT>;port=3306;database=DCandidateDB;user=root;"
           - name: "CORS_ALLOWED_ORIGINS"
             value: "ALB_DNS_PLACEHOLDER"
-
-        # Service Connect
+          - name: DB_HOST
+              value: candidate-db-instance.cp04g2swc7xk.ap-southeast-1.rds.amazonaws.com
+          - name: DB_NAME
+              value: DCandidateDB
+          - name: DB_USER
+              value: admin
+          - name: "ConnectionStrings__DefaultConnection"
+            value: "server=<RDS-ENDPOINT>;port=3306;database=DCandidateDB;user=admin;password=${DB_PASSWORD};"
         service_connect:
           namespace_key: "lab_ns"
           discovery_name: "backend"
@@ -91,7 +94,7 @@ ecs_clusters:
       frontend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-frontend:dev-5"
+        image: "thson20210744/fullstack-frontend:dev-6"
         container_port: 80
         port_name: "frontend-http"
         security_group_keys: ["ecs_sg"]
@@ -176,7 +179,7 @@ rds_databases:
     instance_class: "db.t3.micro"
     allocated_storage: 20
     db_name: "DCandidateDB"
-    username: "root"
+    username: "admin"
     vpc_key: "main_vpc"
     sg_key: "rds_sg"
     port: 3306

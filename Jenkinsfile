@@ -61,9 +61,9 @@ pipeline {
         stage('Deploy with Terraform') {
             when {
                 anyOf {
-                    branch 'dev'
-                    branch 'uat'
-                    branch 'prod'
+                  expression { env.ONLY_BRANCH == 'dev' }
+                  expression { env.ONLY_BRANCH == 'uat' }
+                  expression { env.ONLY_BRANCH == 'prod' }
                 }
             }
             steps {

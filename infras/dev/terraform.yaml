@@ -1,3 +1,4 @@
+tags: { environment: "dev" }
 ################################################################################
 # VPC
 ################################################################################
@@ -94,7 +95,7 @@ ecs_clusters:
       frontend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-frontend:dev-10"
+        image: "thson20210744/fullstack-frontend:dev-11"
         container_port: 80
         port_name: "frontend-http"
         security_group_keys: ["ecs_sg"]

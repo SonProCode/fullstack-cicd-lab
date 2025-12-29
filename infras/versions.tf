@@ -9,7 +9,8 @@ terraform {
   }
 
   backend "s3" {
-    key          = "terraform.tfstate"
+    bucket = "sonth40-s3-tfstate-v2"
+    key    = "fullstack/terraform.tfstate"
     region       = "ap-southeast-1"
     use_lockfile = false
   }

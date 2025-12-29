@@ -60,13 +60,42 @@ pipeline {
       }
     }
   }
+  stage('Deploy with Terraform') {
+      when {
+        anyOf {
+          branch 'dev'
+          branch 'uat'
+          branch 'prod'
+        }
+      }
+      steps {
+        withCredentials([[
+          $class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: 'aws-creds'
+        ]]) {
+          sh '''
+            cd infras
+
+              terraform init \
+              -backend-config="bucket=sonth40-s3-tfstate-v2" \
+              -backend-config="key=fullstack/$ONLY_BRANCH/terraform.tfstate" \
+              -backend-config="region=ap-southeast-1"
+
+            terraform apply -target="module.acm[\\"alb_cert\\"]" -auto-approve
+
+            terraform apply -auto-approve \
+              -var="environment=$ONLY_BRANCH"
+          '''
+        }
+      }
+  }
 
   post {
     success {
-      echo "CI SUCCESS – Images pushed with tag: $TAG"
+      echo "CI/CD SUCCESS – Deployed to environment: $ONLY_BRANCH (tag: $TAG)"
     }
     failure {
-      echo "CI FAILED"
+      echo "PIPELINE FAILED"
     }
   }
 }

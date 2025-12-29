@@ -53,7 +53,7 @@ ecs_clusters:
       backend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-backend:dev-10"
+        image: "thson20210744/fullstack-backend:dev-11"
         container_port: 80
         port_name: "backend-http"
         rds_reference: "main_db"

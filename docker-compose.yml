@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-dev
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: DCandidateDB
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"   # chỉ để debug local, có thể bỏ sau
+    networks:
+      - lab-net
+
+  backend:
+    image: backend:dev
+    build:
+      context: ./WebAPI/WebAPI
+      dockerfile: Dockerfile
+    container_name: backend-dev
+    depends_on:
+      - mysql
+    restart: always
+    ports:
+      - "5000:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+      # DB connection (QUAN TRỌNG)
+      ConnectionStrings__DefaultConnection: >
+        server=mysql;
+        port=3306;
+        database=DCandidateDB;
+        user=root;
+        password=123456
+
+      # CORS (cho React local + React container)
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://frontend
+    networks:
+      - lab-net
+
+  frontend:
+    image: frontend:dev
+    build:
+      context: ./react-app
+      dockerfile: Dockerfile
+    container_name: frontend-dev
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://backend/api
+    networks:
+      - lab-net
+
+volumes:
+  mysql_data:
+
+networks:
+  lab-net:
+    driver: bridge

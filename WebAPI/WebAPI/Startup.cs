@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WebAPI.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace WebAPI
 {
@@ -79,6 +80,10 @@ namespace WebAPI
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGet("/", async context =>
+                {
+                    await context.Response.WriteAsync("Backend is Healthy");
+                });
                 endpoints.MapControllers();
             });
         }

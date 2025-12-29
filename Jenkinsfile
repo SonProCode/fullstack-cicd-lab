@@ -79,7 +79,8 @@ pipeline {
                             -backend-config="key=fullstack/$ONLY_BRANCH/terraform.tfstate" \
                             -backend-config="region=ap-southeast-1"
 
-                        terraform apply -target='module.acm["alb_cert"]' -auto-approve
+                        terraform apply -target='module.acm["alb_cert"]' -auto-approve \
+                            -var="environment=$ONLY_BRANCH"
 
                         terraform apply -auto-approve \
                             -var="environment=$ONLY_BRANCH"

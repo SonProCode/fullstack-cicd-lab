@@ -11,7 +11,8 @@ module "rds" {
   source             = "terraform-aws-modules/rds/aws"
   for_each           = try(local.var.rds_databases, {})
   create_db_instance = try(each.value.create, true)
-
+  version = "~> 6.0"
+  
   engine                   = try(each.value.engine, null)
   engine_version           = try(each.value.engine_version, null)
   engine_lifecycle_support = try(each.value.engine_lifecycle_support, null)

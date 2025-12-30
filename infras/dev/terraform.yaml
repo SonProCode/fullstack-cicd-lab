@@ -186,8 +186,8 @@ rds_databases:
     manage_master_user_password: true
     performance_insights_enabled: false
     kms_key_id: "alias/aws/rds"
-    db_subnet_group_name: "main-db-subnet-group"
-    monitoring_role_name: "rds-monitoring-role"
+    db_subnet_group_name: "dev-main-db-subnet-group"
+    monitoring_role_name: "dev-rds-monitoring-role"
     performance_insights_enabled: false
     storage_encrypted: true
 ################################################################################
@@ -242,9 +242,9 @@ sg_rules:
     protocol: "tcp"
     from_port: 3306
     to_port: 3306
-################################################################################
+#################################################################################
 # Zone DNS (Route53) and ACM
-################################################################################
+#################################################################################
 route53_zones:
   main_zone:
     name: "sonth40.dpdns.org"

@@ -101,7 +101,9 @@ pipeline {
                     sh '''
                         cd infras
 
-                        terraform init \
+                        rm -rf .terraform .terraform.lock.hcl
+
+                        terraform init -reconfigure \
                             -backend-config="bucket=sonth40-s3-tfstate-v2" \
                             -backend-config="key=fullstack/$ONLY_BRANCH/terraform.tfstate" \
                             -backend-config="region=ap-southeast-1"

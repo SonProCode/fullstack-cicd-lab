@@ -40,15 +40,19 @@ module "acm" {
   for_each           = try(local.var.acms, {})
   create_certificate = try(each.value.create, true)
 
-  domain_name               = try(module.route53_zone[each.value.route53_key].name, each.value.domain_name, null)
-  subject_alternative_names = try(["*.${module.route53_zone[each.value.route53_key].name}"], ["*.${each.value.domain_name}"], [])
-  export                    = try(each.value.export, null)
-  validation_method         = try(each.value.validation_method, null)
-  key_algorithm             = try(each.value.key_algorithm, null)
+  # Lấy tên domain từ data source hoặc từ biến trong YAML [cite: 28]
+  domain_name = try(data.aws_route53_zone.main[each.value.route53_key].name, each.value.domain_name)
+  
+  # Tạo Wildcard certificate dựa trên Zone Name [cite: 28]
+  subject_alternative_names = [
+    "*.${data.aws_route53_zone.main[each.value.route53_key].name}"
+  ]
 
-  region               = try(each.value.region, null)
-  validate_certificate = try(each.value.validate_certificate, true)
-  zone_id              = try(module.route53_zone[each.value.route53_key].id, null)
+  validation_method    = try(each.value.validation_method, "DNS")
+  validate_certificate = true
+
+  # QUAN TRỌNG: Truyền zone_id từ Data Source để module tự tạo record validation 
+  zone_id = data.aws_route53_zone.main[each.value.route53_key].zone_id
 
   tags = merge(local.tags, try(each.value.tags, {}))
 }

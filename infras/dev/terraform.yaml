@@ -53,7 +53,7 @@ ecs_clusters:
       backend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-backend:dev-15"
+        image: "thson20210744/fullstack-backend:dev-16"
         container_port: 80
         port_name: "backend-http"
         rds_reference: "main_db"
@@ -95,7 +95,7 @@ ecs_clusters:
       frontend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-frontend:dev-15"
+        image: "thson20210744/fullstack-frontend:dev-16"
         container_port: 80
         port_name: "frontend-http"
         security_group_keys: ["ecs_sg"]
@@ -252,17 +252,17 @@ route53_zones:
 
 acms:
   alb_cert:
-    route53_key: "main_zone" # Để code tự lấy domain_name từ zone
+    route53_key: "main_zone"
+    domain_name: "dev.sonth40.dpdns.org"
     validation_method: "DNS"
 
 route53_records:
   alb_alias_record:
-    name: "sonth40.dpdns.org"
+    name: "dev.sonth40.dpdns.org"
     route53_key: "main_zone"
-    # Module Route53 yêu cầu block records theo map
     records:
       my_alias:
         type: "A"
-        alb_key: "main_alb" # Key này phải khớp với key trong block albs
+        alb_key: "main_alb"
         alias: 
           evaluate_target_health: true

@@ -66,15 +66,11 @@ module "alb" {
 ################################################################################
 # Route 53
 ################################################################################
-module "route53_zone" {
-  source   = "terraform-aws-modules/route53/aws"
+data "aws_route53_zone" "main" {
   for_each = try(local.var.route53_zones, {})
-  create   = try(each.value.create, true)
-
-  name          = try(each.value.name, null)
-  comment       = try(each.value.comment, null)
-  force_destroy = try(each.value.force_destroy, true)
-  tags          = try(each.value.tags, {})
+  
+  name         = each.value.name
+  private_zone = false
 }
 
 resource "aws_route53_record" "this" {
@@ -92,7 +88,8 @@ resource "aws_route53_record" "this" {
     ]) : item.key => item
   }
 
-  zone_id = module.route53_zone[each.value.route53_key].id
+  # Lấy zone_id từ data source [cite: 24]
+  zone_id = data.aws_route53_zone.main[each.value.route53_key].zone_id
   name    = each.value.name
   type    = each.value.type
 

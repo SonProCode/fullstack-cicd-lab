@@ -169,7 +169,7 @@ const DCandidateForm = ({ classes, ...props }) => {
                             type="submit"
                             className={classes.smMargin}
                         >
-                            Submit
+                            Nộp
                         </Button>
                         <Button
                             variant="contained"

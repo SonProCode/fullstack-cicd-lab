@@ -1,18 +1,18 @@
-tags: { environment: "prod" }
+tags: { environment: "uat" }
 ################################################################################
 # VPC
 ################################################################################
 vpcs:
   main_vpc:
-    name: "fullstack-prod-vpc"
-    cidr: "10.3.0.0/16"
+    name: "fullstack-uat-vpc"
+    cidr: "10.2.0.0/16"
     enable_ipv6: false
     instance_tenancy: "default"
 
     azs: ["ap-southeast-1a", "ap-southeast-1b"]
-    public_subnets: ["10.3.1.0/24", "10.3.2.0/24"]
-    private_subnets: ["10.3.10.0/24", "10.3.11.0/24"]
-    database_subnets: ["10.3.20.0/24", "10.3.21.0/24"]
+    public_subnets: ["10.2.1.0/24", "10.2.2.0/24"]
+    private_subnets: ["10.2.10.0/24", "10.2.11.0/24"]
+    database_subnets: ["10.2.20.0/24", "10.2.21.0/24"]
 
     enable_nat_gateway: true
     single_nat_gateway: true
@@ -37,7 +37,7 @@ namespaces:
 ################################################################################
 ecs_clusters:
   ecs_lab:
-    name: "prod-ecs-lab"
+    name: "uat-ecs-lab"
     vpc_key: "main_vpc" # Key để map với module VPC
     
     # Cấu hình Capacity Provider mặc định
@@ -118,7 +118,7 @@ ecs_clusters:
 albs:
   main_alb:
     load_balancer_type: "application"
-    name: "prod-dsq-backend-alb"
+    name: "uat-dsq-backend-alb"
     internal: false
     ip_address_type: "ipv4"
 
@@ -171,7 +171,7 @@ albs:
 ################################################################################
 rds_databases:
   main_db:
-    identifier: "prod-candidate-db-instance"
+    identifier: "uat-candidate-db-instance"
     engine: "mysql"
     engine_version: "8.0.37"
     family: "mysql8.0"              # Bắt buộc để tạo Parameter Group [cite: 11]
@@ -196,7 +196,7 @@ rds_databases:
 sgs:
   # Security Group cho Load Balancer (Cửa ngõ)
   alb_sg:
-    name: "prod-dsq-alb-sg"
+    name: "uat-dsq-alb-sg"
     description: "Security group for ALB"
     vpc_key: "main_vpc"
 
@@ -207,7 +207,7 @@ sgs:
 
   # Security Group cho ECS (Frontend & Backend)
   ecs_sg:
-    name: "prod-dsq-ecs-sg"
+    name: "uat-dsq-ecs-sg"
     description: "Security group for ECS Services"
     vpc_key: "main_vpc"
 
@@ -216,7 +216,7 @@ sgs:
 
   # Security Group cho RDS (Database)
   rds_sg:
-    name: "prod-dsq-rds-sg"
+    name: "uat-dsq-rds-sg"
     description: "Security group for RDS Database"
     vpc_key: "main_vpc"
 
@@ -257,7 +257,7 @@ acms:
 
 route53_records:
   alb_alias_record:
-    name: "prod.sonth40.dpdns.org"
+    name: "uat.sonth40.dpdns.org"
     route53_key: "main_zone"
     records:
       my_alias:

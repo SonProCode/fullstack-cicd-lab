@@ -5,7 +5,7 @@ pipeline {
         REGISTRY = "thson20210744"
         BACKEND_IMAGE = "fullstack-backend"
         FRONTEND_IMAGE = "fullstack-frontend"
-        ONLY_BRANCH = "${env.GIT_BRANCH.split('/')[-1]}"
+        ONLY_BRANCH = "${env.GIT_BRANCH.split('/')[-1] == 'main' ? 'prod' : env.GIT_BRANCH.split('/')[-1]}"
         TAG = "${ONLY_BRANCH}-${env.BUILD_NUMBER}"
     }
 
@@ -57,6 +57,33 @@ pipeline {
                 '''
             }
         }
+        
+        stage('Update Terraform Manifest') {
+            when {
+                anyOf {
+                  expression { env.ONLY_BRANCH == 'dev' }
+                  expression { env.ONLY_BRANCH == 'uat' }
+                  expression { env.ONLY_BRANCH == 'prod' }
+                }
+            }
+            steps {
+                sh '''
+                    echo "Updating image tags in ./infras/$ONLY_BRANCH/terraform.yaml"
+                    
+                    # Đường dẫn tới file yaml theo cấu trúc thư mục của bạn
+                    TARGET_FILE="./infras/$ONLY_BRANCH/terraform.yaml"
+
+                    # Cập nhật tag cho Backend Image
+                    sed -i "s|image: \\"$REGISTRY/$BACKEND_IMAGE:.*\\"|image: \\"$REGISTRY/$BACKEND_IMAGE:$TAG\\"|g" $TARGET_FILE
+
+                    # Cập nhật tag cho Frontend Image
+                    sed -i "s|image: \\"$REGISTRY/$FRONTEND_IMAGE:.*\\"|image: \\"$REGISTRY/$FRONTEND_IMAGE:$TAG\\"|g" $TARGET_FILE
+                    
+                    echo "New Backend Image: $REGISTRY/$BACKEND_IMAGE:$TAG"
+                    echo "New Frontend Image: $REGISTRY/$FRONTEND_IMAGE:$TAG"
+                '''
+            }
+        }
 
         stage('Deploy with Terraform') {
             when {
@@ -74,7 +101,9 @@ pipeline {
                     sh '''
                         cd infras
 
-                        terraform init \
+                        rm -rf .terraform .terraform.lock.hcl
+
+                        terraform init -reconfigure \
                             -backend-config="bucket=sonth40-s3-tfstate-v2" \
                             -backend-config="key=fullstack/$ONLY_BRANCH/terraform.tfstate" \
                             -backend-config="region=ap-southeast-1"

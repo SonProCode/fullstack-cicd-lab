@@ -1,18 +1,18 @@
-tags: { environment: "dev" }
+tags: { environment: "uat" }
 ################################################################################
 # VPC
 ################################################################################
 vpcs:
   main_vpc:
-    name: "fullstack-dev-vpc"
-    cidr: "10.1.0.0/16"
+    name: "fullstack-uat-vpc"
+    cidr: "10.2.0.0/16"
     enable_ipv6: false
     instance_tenancy: "default"
 
     azs: ["ap-southeast-1a", "ap-southeast-1b"]
-    public_subnets: ["10.1.1.0/24", "10.1.2.0/24"]
-    private_subnets: ["10.1.10.0/24", "10.1.11.0/24"]
-    database_subnets: ["10.1.20.0/24", "10.1.21.0/24"]
+    public_subnets: ["10.2.1.0/24", "10.2.2.0/24"]
+    private_subnets: ["10.2.10.0/24", "10.2.11.0/24"]
+    database_subnets: ["10.2.20.0/24", "10.2.21.0/24"]
 
     enable_nat_gateway: true
     single_nat_gateway: true
@@ -52,7 +52,7 @@ ecs_clusters:
       backend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-backend:dev-16"
+        image: "thson20210744/fullstack-backend:dev-10"
         container_port: 80
         port_name: "backend-http"
         rds_reference: "main_db"
@@ -94,7 +94,7 @@ ecs_clusters:
       frontend:
         cpu: 512
         memory: 1024
-        image: "thson20210744/fullstack-frontend:dev-16"
+        image: "thson20210744/fullstack-frontend:dev-10"
         container_port: 80
         port_name: "frontend-http"
         security_group_keys: ["ecs_sg"]
@@ -174,8 +174,8 @@ rds_databases:
     identifier: "candidate-db-instance"
     engine: "mysql"
     engine_version: "8.0.37"
-    family: "mysql8.0"
-    major_engine_version: "8.0"     
+    family: "mysql8.0"              # Bắt buộc để tạo Parameter Group [cite: 11]
+    major_engine_version: "8.0"     # Bắt buộc để tạo Option Group [cite: 11]
     instance_class: "db.t3.micro"
     allocated_storage: 20
     db_name: "DCandidateDB"
@@ -257,7 +257,7 @@ acms:
 
 route53_records:
   alb_alias_record:
-    name: "dev.sonth40.dpdns.org"
+    name: "uat.sonth40.dpdns.org"
     route53_key: "main_zone"
     records:
       my_alias:

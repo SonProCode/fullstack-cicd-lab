@@ -1,18 +1,18 @@
+tags: { environment: "prod" }
 ################################################################################
 # VPC
 ################################################################################
 vpcs:
   main_vpc:
-    name: "fullstack-main-vpc"
-    cidr: "10.1.0.0/16"
+    name: "fullstack-prod-vpc"
+    cidr: "10.3.0.0/16"
     enable_ipv6: false
     instance_tenancy: "default"
 
     azs: ["ap-southeast-1a", "ap-southeast-1b"]
-    public_subnets: ["10.1.1.0/24", "10.1.2.0/24"]
-    private_subnets: ["10.1.101.0/24", "10.1.102.0/24"]
-    database_subnets:
-      ["10.1.201.0/24", "10.1.202.0/24", "10.1.203.0/24", "10.1.204.0/24"]
+    public_subnets: ["10.3.1.0/24", "10.3.2.0/24"]
+    private_subnets: ["10.3.10.0/24", "10.3.11.0/24"]
+    database_subnets: ["10.3.20.0/24", "10.3.21.0/24"]
 
     enable_nat_gateway: true
     single_nat_gateway: true
@@ -251,17 +251,17 @@ route53_zones:
 
 acms:
   alb_cert:
-    route53_key: "main_zone" # Để code tự lấy domain_name từ zone
+    route53_key: "main_zone"
+    domain_name: "sonth40.dpdns.org"
     validation_method: "DNS"
 
 route53_records:
   alb_alias_record:
-    name: "sonth40.dpdns.org"
+    name: "prod.sonth40.dpdns.org"
     route53_key: "main_zone"
-    # Module Route53 yêu cầu block records theo map
     records:
       my_alias:
         type: "A"
-        alb_key: "main_alb" # Key này phải khớp với key trong block albs
+        alb_key: "main_alb"
         alias: 
           evaluate_target_health: true

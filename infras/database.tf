@@ -12,7 +12,7 @@ module "rds" {
   for_each           = try(local.var.rds_databases, {})
   create_db_instance = try(each.value.create, true)
   version = "~> 6.0"
-  
+
   engine                   = try(each.value.engine, null)
   engine_version           = try(each.value.engine_version, null)
   engine_lifecycle_support = try(each.value.engine_lifecycle_support, null)
@@ -34,7 +34,7 @@ module "rds" {
   db_subnet_group_name            = try(each.value.db_subnet_group_name, null)
   db_subnet_group_use_name_prefix = try(each.value.db_subnet_group_use_name_prefix, false)
   db_subnet_group_description     = try(each.value.db_subnet_group_description, null)
-  subnet_ids                      = try(slice(module.vpc[each.value.vpc_key].database_subnets, 2, 4), [])
+  subnet_ids                      = try(module.vpc[each.value.vpc_key].database_subnets, [])
   db_subnet_group_tags            = merge(local.tags, try(each.value.db_subnet_group_tags, {}))
 
   publicly_accessible    = try(each.value.publicly_accessible, null)

@@ -186,8 +186,8 @@ rds_databases:
     manage_master_user_password: true
     performance_insights_enabled: false
     kms_key_id: "alias/aws/rds"
-    db_subnet_group_name: "main-db-subnet-group"
-    monitoring_role_name: "rds-monitoring-role"
+    db_subnet_group_name: "prod-main-db-subnet-group"
+    monitoring_role_name: "prod-rds-monitoring-role"
     performance_insights_enabled: false
     storage_encrypted: true
 ################################################################################

@@ -57,6 +57,33 @@ pipeline {
                 '''
             }
         }
+        
+        stage('Update Terraform Manifest') {
+            when {
+                anyOf {
+                  expression { env.ONLY_BRANCH == 'dev' }
+                  expression { env.ONLY_BRANCH == 'uat' }
+                  expression { env.ONLY_BRANCH == 'prod' }
+                }
+            }
+            steps {
+                sh '''
+                    echo "Updating image tags in ./infras/$ONLY_BRANCH/terraform.yaml"
+                    
+                    # Đường dẫn tới file yaml theo cấu trúc thư mục của bạn
+                    TARGET_FILE="./infras/$ONLY_BRANCH/terraform.yaml"
+
+                    # Cập nhật tag cho Backend Image
+                    sed -i "s|image: \\"$REGISTRY/$BACKEND_IMAGE:.*\\"|image: \\"$REGISTRY/$BACKEND_IMAGE:$TAG\\"|g" $TARGET_FILE
+
+                    # Cập nhật tag cho Frontend Image
+                    sed -i "s|image: \\"$REGISTRY/$FRONTEND_IMAGE:.*\\"|image: \\"$REGISTRY/$FRONTEND_IMAGE:$TAG\\"|g" $TARGET_FILE
+                    
+                    echo "New Backend Image: $REGISTRY/$BACKEND_IMAGE:$TAG"
+                    echo "New Frontend Image: $REGISTRY/$FRONTEND_IMAGE:$TAG"
+                '''
+            }
+        }
 
         stage('Deploy with Terraform') {
             when {

@@ -5,7 +5,7 @@ pipeline {
         REGISTRY = "thson20210744"
         BACKEND_IMAGE = "fullstack-backend"
         FRONTEND_IMAGE = "fullstack-frontend"
-        ONLY_BRANCH = "${env.GIT_BRANCH.split('/')[-1]}"
+        ONLY_BRANCH = "${env.GIT_BRANCH.split('/')[-1] == 'main' ? 'prod' : env.GIT_BRANCH.split('/')[-1]}"
         TAG = "${ONLY_BRANCH}-${env.BUILD_NUMBER}"
     }
 

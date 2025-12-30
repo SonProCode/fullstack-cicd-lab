@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using WebAPI.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace WebAPI
 {
@@ -23,38 +19,71 @@ namespace WebAPI
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
+            // ===== READ FROM ECS ENV (TERRAFORM-INJECTED) =====
+            var dbHost = Configuration["DB_HOST"];        // từ <RDS-ENDPOINT>
+            var dbName = Configuration["DB_NAME"];
+            var dbUser = Configuration["DB_USER"];
+            var dbPass = Configuration["DB_PASSWORD"];    // từ Secrets Manager
+
+            if (string.IsNullOrWhiteSpace(dbHost) ||
+                string.IsNullOrWhiteSpace(dbName) ||
+                string.IsNullOrWhiteSpace(dbUser) ||
+                string.IsNullOrWhiteSpace(dbPass))
+            {
+                throw new Exception("Database environment variables are missing");
+            }
+
+            var connectionString =
+                $"Server={dbHost};Port=3306;Database={dbName};User={dbUser};Password={dbPass};";
+
             services.AddDbContext<DonationDBContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("DevConnection")));
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-
-            services.AddCors();
+            // ===== CORS =====
+            services.AddCors(options =>
+            {
+                options.AddPolicy("FrontendPolicy", builder =>
+                {
+                    var allowedOrigins = Configuration["CORS_ALLOWED_ORIGINS"];
+                    if (!string.IsNullOrEmpty(allowedOrigins))
+                    {
+                        builder.WithOrigins(
+                                allowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            )
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                });
+            });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseCors(options =>
-            options.WithOrigins("http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod());
-
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<DonationDBContext>();
+                dbContext.Database.Migrate();
+            }
 
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("FrontendPolicy");
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGet("/", async context =>
+                {
+                    await context.Response.WriteAsync("Backend is Healthy");
+                });
                 endpoints.MapControllers();
             });
         }

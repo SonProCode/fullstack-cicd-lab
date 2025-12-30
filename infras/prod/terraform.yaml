@@ -37,7 +37,7 @@ namespaces:
 ################################################################################
 ecs_clusters:
   ecs_lab:
-    name: "ecs-lab"
+    name: "prod-ecs-lab"
     vpc_key: "main_vpc" # Key để map với module VPC
     
     # Cấu hình Capacity Provider mặc định
@@ -118,7 +118,7 @@ ecs_clusters:
 albs:
   main_alb:
     load_balancer_type: "application"
-    name: "dsq-backend-alb"
+    name: "prod-dsq-backend-alb"
     internal: false
     ip_address_type: "ipv4"
 
@@ -171,7 +171,7 @@ albs:
 ################################################################################
 rds_databases:
   main_db:
-    identifier: "candidate-db-instance"
+    identifier: "prod-candidate-db-instance"
     engine: "mysql"
     engine_version: "8.0.37"
     family: "mysql8.0"              # Bắt buộc để tạo Parameter Group [cite: 11]
@@ -196,7 +196,7 @@ rds_databases:
 sgs:
   # Security Group cho Load Balancer (Cửa ngõ)
   alb_sg:
-    name: "dsq-alb-sg"
+    name: "prod-dsq-alb-sg"
     description: "Security group for ALB"
     vpc_key: "main_vpc"
 
@@ -207,7 +207,7 @@ sgs:
 
   # Security Group cho ECS (Frontend & Backend)
   ecs_sg:
-    name: "dsq-ecs-sg"
+    name: "prod-dsq-ecs-sg"
     description: "Security group for ECS Services"
     vpc_key: "main_vpc"
 
@@ -216,7 +216,7 @@ sgs:
 
   # Security Group cho RDS (Database)
   rds_sg:
-    name: "dsq-rds-sg"
+    name: "prod-dsq-rds-sg"
     description: "Security group for RDS Database"
     vpc_key: "main_vpc"
 

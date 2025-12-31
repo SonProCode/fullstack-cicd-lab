@@ -31,40 +31,41 @@ module "ecs" {
       # --- Container Definition ---
       container_definitions = {
             (service_name) = {
-              image     = try(service_config.image, "nginx:latest")
-              essential = true
-              readonlyRootFilesystem = false
-              portMappings = [{
-                  name          = try(service_config.port_name, "http")
-                  containerPort = try(service_config.container_port, 80)
-                  protocol      = "tcp"
-              }]
+                image     = try(service_config.image, "nginx:latest")
+                essential = true
+                readonlyRootFilesystem = false
+                portMappings = [{
+                    name          = try(service_config.port_name, "http")
+                    containerPort = try(service_config.container_port, 80)
+                    protocol      = "tcp"
+                }]
 
-              # --- XỬ LÝ BIẾN MÔI TRƯỜNG ĐỘNG ---
-              environment = [
-                  for env in try(service_config.environment, []) : {
-                      name  = env.name
-                      # Sử dụng replace lồng nhau để thay thế các placeholder
-                     value = replace(
-                        replace(
-                          env.value, 
-                          "<RDS-ENDPOINT>", 
-                          try(module.rds[service_config.rds_reference].db_instance_address, "")
-                        ), 
-                        "ALB_DNS_PLACEHOLDER", 
-                        try(module.alb[service_config.alb_key].dns_name, "")
-                      )
-                  }
-              ]
+                # --- XỬ LÝ BIẾN MÔI TRƯỜNG ĐỘNG ---
+                environment = [
+                    for env in try(service_config.environment, []) : {
+                        name  = env.name
+                        # Sử dụng replace lồng nhau để thay thế các placeholder
+                      value = replace(
+                          replace(
+                            env.value, 
+                            "<RDS-ENDPOINT>", 
+                            try(module.rds[service_config.rds_reference].db_instance_address, "")
+                          ), 
+                          "ALB_DNS_PLACEHOLDER", 
+                          try(module.alb[service_config.alb_key].dns_name, "")
+                        )
+                    }
+                ]
 
-              secrets = [
-                  for s in try(service_config.secrets, []) : {
-                    name      = s.name 
-                    valueFrom = "${module.rds[s.rds_secret_key].db_instance_master_user_secret_arn}:password::"
-                  }
-              ]
-              enable_cloudwatch_logging = true
-        }
+                secrets = [
+                    for s in try(service_config.secrets, []) : {
+                      name      = s.name 
+                      valueFrom = "${module.rds[s.rds_secret_key].db_instance_master_user_secret_arn}:password::"
+                    }
+                ]
+                cloudwatch_log_group_name = "/aws/ecs/${local.var.tags.environment}/${service_name}"
+                enable_cloudwatch_logging = true
+            }
       }
 
       # --- Service Connect ---
@@ -127,7 +128,7 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
     for s in local.services_needing_secrets : "${s.cluster_key}.${s.service_name}" => s
   }
 
-  name        = "${each.value.service_name}-secrets-policy"
+  name        = "${local.var.tags.environment}-${each.value.service_name}-secrets-policy"
   description = "Allow ECS to fetch RDS secrets from Secrets Manager"
 
   policy = jsonencode({

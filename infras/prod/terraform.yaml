@@ -26,10 +26,10 @@ vpcs:
 ################################################################################
 namespaces:
   lab_ns: # Key nội bộ để tham chiếu
-    name: "lab"
+    name: "prod-lab"
     vpc_key: "main_vpc"
   prod_ns:
-    name: "production"
+    name: "prod-production"
     vpc_key: "main_vpc"
 
 ################################################################################
@@ -153,13 +153,13 @@ albs:
                   values: ["/api/*"]
     target_groups:
       frontend_tg:
-        name: "tg-frontend"
+        name: "prod-tg-frontend"
         target_type: "ip"
         protocol: "HTTP"
         port: 80
         create_attachment: false # QUAN TRỌNG: ECS tự attach
       backend_tg:
-        name: "tg-backend"
+        name: "prod-tg-backend"
         target_type: "ip"
         protocol: "HTTP"
         port: 80

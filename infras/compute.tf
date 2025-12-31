@@ -127,7 +127,7 @@ resource "aws_iam_policy" "ecs_secrets_policy" {
     for s in local.services_needing_secrets : "${s.cluster_key}.${s.service_name}" => s
   }
 
-  name        = "${var.tags.environment}-${each.value.service_name}-secrets-policy"
+  name        = "${local.var.tags.environment}-${each.value.service_name}-secrets-policy"
   description = "Allow ECS to fetch RDS secrets from Secrets Manager"
 
   policy = jsonencode({
